@@ -1,4 +1,4 @@
-package com.sancon.hrpayroll.entities;
+package com.sancon.hrpayroll.operation;
 
 import java.io.Serializable;
 
