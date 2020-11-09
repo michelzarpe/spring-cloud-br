@@ -26,6 +26,13 @@ public class WorkerResources {
 	@Autowired
 	public WorkerRepository repository;
 	
+	@GetMapping(value="/configs")
+	public ResponseEntity<Void> getConfigs(){
+		log.info("Config: "+env.getProperty("test.config"));
+		return ResponseEntity.noContent().build();
+	}
+
+	
 	@GetMapping
 	public ResponseEntity<List<Worker>> findAll(){
 		List<Worker> list = repository.findAll();
