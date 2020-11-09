@@ -3,6 +3,7 @@ package com.sancon.hrworker.resources;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import com.sancon.hrworker.repositories.WorkerRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
+@RefreshScope
 @Slf4j
 @RestController
 @RequestMapping(value = "/workers")
