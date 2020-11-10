@@ -44,7 +44,7 @@ public class User implements Serializable {
 	@JoinTable(name = "tb_user_role",
 			   joinColumns = @JoinColumn(referencedColumnName ="id"),
 			   inverseJoinColumns = @JoinColumn(referencedColumnName = "id"))
-	private Set<Role> roles = new HashSet<>();
+	private Set<Role> role = new HashSet<>();
 	
 	
 }
