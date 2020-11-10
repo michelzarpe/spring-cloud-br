@@ -23,8 +23,6 @@ public class HrUserApplication implements CommandLineRunner{
 
 	@Override
 	public void run(String... args) throws Exception {
-		
 		//log.info("BCRYPT = "+passwordEncoder.encode("123456"));
 	}
-
 }
