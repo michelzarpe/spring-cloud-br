@@ -18,7 +18,11 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter{
 	
 	private static final String [] PUBLIC = {"/hr-oauth/oauth/token"}; // rotas publicas
 	private static final String [] OPERATOR = {"/hr-worker/**"}; // rotas para operadores
-	private static final String [] ADMIN = {"/hr-payroll/**","/hr-user/**"}; // rotas para operadores
+	private static final String [] ADMIN = {"/hr-payroll/**",
+											"/hr-user/**",
+											"/actuator/**",
+											"/hr-worker/actuator/**",
+											"/hr-oauth/actuator/**"}; // rotas para operadores
 	
 	@Override
 	public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
