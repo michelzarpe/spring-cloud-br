@@ -1,29 +1,151 @@
-# Microsserviços Java com Spring Boot e Spring Cloud
-### Aprenda a estruturar um sistema de microsserviços Java com Spring Boot e Spring Cloud.
+# Criando e testando containers Docker
 
-Você vai aprender a criar, passo a passo e do absoluto zero, um sistema composto por vários microsserviços que comunicam entre si de forma transparente, escalável e com balanceamento de carga.
-Os microsserviços são registrados em um "Discovery Server" (Eureka), de modo que a comunicação entre eles é feita pelo nome do microsserviço. Além disso, as requisições são feitas em um API Gateway (Zuul), responsável por rotear e autorizar as requisições.
-Você vai aprender a trabalhar com autenticação e autorização, usando OAuth e tokens JWT. Além disso, vai aprender como gerar e testar os containers Docker para deixar os microsserviços e as bases de dados aptos para implantação.
-O objetivo deste curso não é esgotar todos recursos do ecossistema Spring, mas sim apresentar uma introdução, de forma bem didática, de algumas das principais ferramentas do Spring Cloud, de modo que o desenvolvedor se familiarize com o processo básico de construção dos microsserviços, sua configuração e comunicação, e possa depois seguir se especializando se assim desejar.
+## Criar rede docker para sistema hr
+```
+docker network create hr-net
+```
 
-Os conteúdos do curso incluem:
-1. Feign para requisições de API entre microsserviços
-2. Ribbon para balanceamento de carga
-3. Servidor Eureka para registro dos microsserviços
-4. API Gateway Zuul para roteamento e autorização
-5. Hystrix para tolerância a falhas
-6. OAuth e JWT para autenticação e autorização
-7. Servidor de configuração centralizada com dados em repositório Git
-8. Geração de containers Docker para os microsserviços e bases de dados
+## Testando perfil dev com Postgresql no Docker
+```
+docker pull postgres:12-alpine
 
-Este curso é de nível iniciante do ponto de vista de microsserviços e do ferramental Spring Cloud, mas vale ressaltar que não é para iniciantes em Java ou Spring Boot. É preciso já ter pelo menos conhecimento básico de construção de API's REST com Spring Boot e Java.
-Estou muito feliz em apresentar este curso para você, e desejo que ele possa contribuir para você dar mais um passo na sua carreia. Um grande abraço e te vejo nas aulas.
+docker run -p 5432:5432 --name hr-worker-pg12 --network hr-net -e POSTGRES_PASSWORD=1234567 -e POSTGRES_DB=db_hr_worker postgres:12-alpine
 
-## O que você aprenderá
-1. Uma introdução a algumas das principais ferramentas do Spring Cloud para estruturação de um sistema em microsserviços
-2. Chamadas de API entre microsserviços por meio de clientes Feign
-3. Criar microsserviços escaláveis, com resolução de nomes e balanceamento de carga de forma transparente, usando servidor Eureka
-4. Roteamento transparente de microsserviços com Zuul API Gateway
-5. Configuração centralizada por meio de um servidor de configuração
-6. Autenticação e autorização compartilhada por meio do API Gateway, usando Oauth e JWT
-![Screenshot](ecosistema_microsservico.png)
+docker run -p 5432:5432 --name hr-user-pg12 --network hr-net -e POSTGRES_PASSWORD=1234567 -e POSTGRES_DB=db_hr_user postgres:12-alpine
+```
+
+## hr-config-server
+```
+FROM openjdk:11
+VOLUME /tmp
+EXPOSE 8888
+ADD ./target/hr-config-server-0.0.1-SNAPSHOT.jar hr-config-server.jar
+ENTRYPOINT ["java","-jar","/hr-config-server.jar"]
+``` 
+```
+mvnw clean package
+
+docker build -t hr-config-server:v1 .
+
+docker run -p 8888:8888 --name hr-config-server --network hr-net -e GITHUB_USER=acenelio -e GITHUB_PASS= hr-config-server:v1
+```
+
+## hr-eureka-server
+```
+FROM openjdk:11
+VOLUME /tmp
+EXPOSE 8761
+ADD ./target/hr-eureka-server-0.0.1-SNAPSHOT.jar hr-eureka-server.jar
+ENTRYPOINT ["java","-jar","/hr-eureka-server.jar"]
+``` 
+```
+mvnw clean package
+
+docker build -t hr-eureka-server:v1 .
+
+docker run -p 8761:8761 --name hr-eureka-server --network hr-net hr-eureka-server:v1
+```
+
+## hr-worker
+```
+FROM openjdk:11
+VOLUME /tmp
+ADD ./target/hr-worker-0.0.1-SNAPSHOT.jar hr-worker.jar
+ENTRYPOINT ["java","-jar","/hr-worker.jar"]
+``` 
+```
+mvnw clean package -DskipTests
+
+docker build -t hr-worker:v1 .
+
+docker run -P --network hr-net hr-worker:v1
+```
+
+## hr-user
+```
+FROM openjdk:11
+VOLUME /tmp
+ADD ./target/hr-user-0.0.1-SNAPSHOT.jar hr-user.jar
+ENTRYPOINT ["java","-jar","/hr-user.jar"]
+``` 
+```
+mvnw clean package -DskipTests
+
+docker build -t hr-user:v1 .
+
+docker run -P --network hr-net hr-user:v1
+```
+
+## hr-payroll
+```
+FROM openjdk:11
+VOLUME /tmp
+ADD ./target/hr-payroll-0.0.1-SNAPSHOT.jar hr-payroll.jar
+ENTRYPOINT ["java","-jar","/hr-payroll.jar"]
+``` 
+```
+mvnw clean package -DskipTests
+
+docker build -t hr-payroll:v1 .
+
+docker run -P --network hr-net hr-payroll:v1
+```
+
+## hr-oauth
+```
+FROM openjdk:11
+VOLUME /tmp
+ADD ./target/hr-oauth-0.0.1-SNAPSHOT.jar hr-oauth.jar
+ENTRYPOINT ["java","-jar","/hr-oauth.jar"]
+``` 
+```
+mvnw clean package -DskipTests
+
+docker build -t hr-oauth:v1 .
+
+docker run -P --network hr-net hr-oauth:v1
+```
+
+## hr-api-gateway-zuul
+```
+FROM openjdk:11
+VOLUME /tmp
+EXPOSE 8765
+ADD ./target/hr-api-gateway-zuul-0.0.1-SNAPSHOT.jar hr-api-gateway-zuul.jar
+ENTRYPOINT ["java","-jar","/hr-api-gateway-zuul.jar"]
+``` 
+```
+mvnw clean package -DskipTests
+
+docker build -t hr-api-gateway-zuul:v1 .
+
+docker run -p 8765:8765 --name hr-api-gateway-zuul --network hr-net hr-api-gateway-zuul:v1
+```
+
+## Alguns comandos Docker
+Criar uma rede Docker
+```
+docker network create <nome-da-rede>
+```
+Baixar imagem do Dockerhub
+```
+docker pull <nome-da-imagem:tag>
+```
+Ver imagens
+```
+docker images
+```
+Criar/rodar um container de uma imagem
+```
+docker run -p <porta-externa>:<porta-interna> --name <nome-do-container> --network <nome-da-rede> <nome-da-imagem:tag> 
+```
+Listar containers
+```
+docker ps
+
+docker ps -a
+```
+Acompanhar logs do container em execução
+```
+docker logs -f <container-id>
+```
