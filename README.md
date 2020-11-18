@@ -149,3 +149,6 @@ Acompanhar logs do container em execução
 ```
 docker logs -f <container-id>
 ```
+## Dockers funcionando
+![Screenshot](containers_ok_.png)
+
